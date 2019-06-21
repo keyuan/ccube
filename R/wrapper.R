@@ -347,7 +347,7 @@ RunCcubePipeline <- function(sampleName = NULL, dataFolder = NULL, resultFolder 
 #' @return A list containing, res, the post assigned result list and, ssm, the annotated data
 #' @details At least one of snvRes and svRes has to be provided. If the both lists are provided, they will be combined.
 #' @export
-RunPostAssignPipeline <- function(snvRes = NULL, svRes = NULL, mydata) {
+RunPostAssignPipeline <- function(snvRes = NULL, svRes = NULL, mydata, verbose = T) {
 
 
   stopifnot( !is.null(snvRes) | !is.null(svRes)  )
@@ -373,7 +373,7 @@ RunPostAssignPipeline <- function(snvRes = NULL, svRes = NULL, mydata) {
     func_assign <- get("AssignWithCcube")
   }
 
-  postAssignRes <- func_assign(referenceRes, mydata, verbose = T)
+  postAssignRes <- func_assign(referenceRes, mydata, verbose = verbose)
 
   if (nrow(mydata) > 1) {
 
