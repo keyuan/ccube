@@ -38,13 +38,13 @@ First, we generate a toy dataset with 500 mutations
 ```{r, cache=TRUE}
 set.seed(1234)
 numSnv <- 500
-ccfSet <- c(1, 0.4, 0.6) # true ccf pool
+ccfSet <- c(1, 0.7, 0.3) # true ccf pool
 ccfTrue <- sample(ccfSet, numSnv, c(0.5,0.2,0.3), replace = T) # simulate true clusters
-purity <- 0.9
+purity <- 0.8
 cnPoolMaj <- c(1,2,3,4) # a pool of possible major copy numbers
 cnPoolMin <- c(0,1,2) # a pool of possible minor copy numbers
-cnPoolMajFractions <- c(0.50, 0.30, 0.1,0.1) # prevalence of possible major copy numbers
-cnPoolMinFractions <- c(1/4, 1/2, 1/4) # prevalence of possible minor copy numbers
+cnPoolMajFractions <- c(1/4, 1/4, 1/4, 1/4) # prevalence of possible major copy numbers
+cnPoolMinFractions <- c(1/3, 1/3, 1/3) # prevalence of possible minor copy numbers
 
 cnProfile = GenerateCopyNumberProfile(cnPoolMaj, cnPoolMin, 
                                       cnPoolMajFractions, cnPoolMinFractions, numSnv)
@@ -55,7 +55,7 @@ head(cnProfile) # column 1: minor copy number, column 2: major copy number, colu
 
 Simulate cancer cell fractions, multiplicity, and reads counts
 ```{r}
-baseDepth = 50
+baseDepth = 40
 mydata <- data.frame(mutation_id = paste0("ss","_", seq_len(numSnv)) ,
                      ccf_true = ccfTrue,
                      minor_cn = cnProfile[,1],
@@ -66,9 +66,9 @@ mydata <- data.frame(mutation_id = paste0("ss","_", seq_len(numSnv)) ,
 
 mydata <- dplyr::mutate(rowwise(mydata),
                         mult_true = sample(seq(1,if (major_cn ==1) { 1 } else {major_cn}), 1), # simulate multiplicity
-                        vaf = cp2ap(ccf_true, purity, normal_cn, total_cn, total_cn, mult_true), # simulate vaf
+                        vaf_true = cp2ap(ccf_true, purity, normal_cn, total_cn, total_cn, mult_true), # simulate vaf
                         total_counts = rpois(1, total_cn/2 * baseDepth), # simulate total read counts
-                        var_counts = rbinom(1, total_counts, vaf),  # simulate variant read counts
+                        var_counts = rbinom(1, total_counts, vaf_true),  # simulate variant read counts
                         ref_counts = total_counts - var_counts)
 
 head(mydata)
@@ -107,6 +107,7 @@ The `results` list contains four variables:
   * `ccube_ccf`: Event CCF, i.e. CCF estimates for individual SNV 
 * `results`: A list all fitted models. Each element is structured the same as `res`
 * `lb`: Best ELBO across fitted models
+* `droppedSsm`: Dropped variants (i.e. variants in regions where major copy number is zero) 
 
 Finally, we make a default plot of Ccube results 
 ```{r}
